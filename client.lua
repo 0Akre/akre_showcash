@@ -1,30 +1,38 @@
+-- [[ QBCORE ]] --
 local QBCore = exports['qb-core']:GetCoreObject()
-local nuiOpen = false
 
-function ToggleNUI()
+-- [[ Variables ]] --
+local nuiOpen = false
+local autoClose, keyMapping = true, true
+
+-- [[ Functions ]] --
+local function ToggleNUI()
+    local PlayerData = QBCore.Functions.GetPlayerData()
+    
     if nuiOpen then
         SendNUIMessage({ type = "hide" })
         nuiOpen = false
     else
-        QBCore.Functions.TriggerCallback('qb-core:getPlayerMoney', function(cash, bank)
-            SendNUIMessage({
-                type = "show_money",
-                cash = cash,
-                bank = bank
-            })
-            nuiOpen = true
-        end)
+        SendNUIMessage({
+            type = "show_money",
+            cash = PlayerData.money["cash"],
+            bank = PlayerData.money["bank"]
+        })
+        nuiOpen = true
     end
 end
 
-RegisterCommand("cash", function()
+-- [[ Other ]] -- 
+RegisterCommand("money", function()
     ToggleNUI()
+    if autoClose then 
+        Wait(5000) 
+        ToggleNUI() 
+    end
 end, false)
+if keyMapping then RegisterKeyMapping("money", 'Shows cash and bank totals', "keyboard", "z") end
 
-RegisterCommand("bank", function()
-    ToggleNUI()
-end, false)
-
+-- [[ NUI Callbacks ]] --
 RegisterNUICallback("closeNUI", function()
     nuiOpen = false
 end)
