@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akre SHOW CASH</title>
+    <title>Wallet Cash/Card Animation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <style>
         @import url('https://fonts.cdnfonts.com/css/digital-7');
-        
+
         body {
             display: flex;
             justify-content: center;
@@ -17,64 +17,197 @@
             overflow: hidden;
             display: none;
         }
-        
-        #money-container {
+
+        #wallet-container {
+            position: relative;
+            width: 15%;
+            height: 15%;
+            left: 45%;
+            top: -10%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #wallet {
             position: absolute;
-            width: 44%;
-            height: 36%;
-            top: 9%;
-            left: 71%;
-            text-align: center;
-            transition: left 1s ease-out;
-        }
-        #money-container.moving {
-            left: 75%;
-        }
-        #money-container img {
             width: 100%;
+            z-index: 1;
+            animation: fadeIn 1s forwards;
         }
-        #cash-amount {
+
+        #item {
+            position: absolute;
+            transform: translate(-50%, -50%) scale(0);
+            animation: none;
+            z-index: 0;
+        }
+
+        #amount {
+            position: absolute;
+            transform: translateX(-50%);
+            font-size: 20px;
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 2;
+            display: inline-block;
+        }
+
+        .cash-style {
             font-family: 'Comic Sans MS', cursive, sans-serif;
-            font-size: 17px;
-            font-weight: bold;
             color: rgb(34, 112, 28);
-            position: absolute;
-            top: 59%;
-            left: 57%;
-            transform: translate(-50%, -50%) rotate(-10deg);
+            top: -50px;
+            left: 44%;
         }
-        #bank-amount {
+
+        .bank-style {
             font-family: 'Digital-7', monospace;
-            font-size: 14px;
-            font-weight: bold;
             color: white;
+            top: -82px;
+            left: 42%;
+        }
+
+        .card-number-style {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
             position: absolute;
-            top: 41.5%;
-            left: 57%;
-            transform: translate(-50%, -50%) rotate(4deg);
+            left: -43%;
+            top: 40px;
+            transform: rotate(0deg);
+            white-space: nowrap;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        @keyframes slideOutDolar {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: translate(-50%, -170%) scale(1) rotate(5deg); opacity: 0; }
+            100% { transform: translate(-50%, -200%) scale(1.1) rotate(10deg); opacity: 1; }
+        }
+
+        @keyframes slideOutCard {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: translate(-50%, -120%) scale(1) rotate(4deg); opacity: 0; }
+            100% { transform: translate(-50%, -200%) scale(1.1) rotate(8deg); opacity: 1; }
+        }
+
+        @keyframes slideInDolar {
+            0% { transform: translate(-50%, -200%) scale(1.1) rotate(10deg); opacity: 1; }
+            100% { transform: translate(-50%, -180%) scale(0) rotate(0deg); opacity: 0; }
+        }
+
+        @keyframes slideInCard {
+            0% { transform: translate(-50%, -200%) scale(1.1) rotate(8deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
         }
     </style>
 </head>
 <body>
-    <div id="money-container" class="animate__animated">
-        <img src="images/cashbank.png" alt="Money">
-        <div id="cash-amount">$0</div>
-        <div id="bank-amount">$0</div>
+    <div id="wallet-container" class="animate__animated">
+        <div id="amount"></div>
+        <img id="item" src="" alt="Item">
+        <img id="wallet" src="images/wallet.png" alt="Wallet">
     </div>
     <script>
+        let currentItem = null;
+    
         window.addEventListener("message", function(event) {
-            const moneyContainer = document.getElementById("money-container");
-            if (event.data.type === "show_money") {
-                moneyContainer.classList.remove("animate__rotateOutUpRight");
-                moneyContainer.classList.add("animate__rotateInUpRight", "moving");
-                document.getElementById("cash-amount").innerText = "$" + event.data.cash;
-                document.getElementById("bank-amount").innerText = "$" + event.data.bank;
-                document.body.style.display = "flex";
-                setTimeout(() => { moneyContainer.classList.remove("moving"); }, 1000);
-            } else if (event.data.type === "hide") {
-                moneyContainer.classList.remove("animate__rotateInUpRight");
-                moneyContainer.classList.add("animate__rotateOutUpRight");
-                setTimeout(() => { document.body.style.display = "none"; }, 1000);
+            const walletContainer = document.getElementById("wallet-container");
+            const wallet = document.getElementById("wallet");
+            const item = document.getElementById("item");
+            const amount = document.getElementById("amount");
+            let cardNumber = "";
+            let bankAmount = "";
+    
+            function generateCardNumber() {
+                let number = "";
+                for (let i = 0; i < 16; i++) {
+                    number += Math.floor(Math.random() * 10);
+                    if ((i + 1) % 4 === 0 && i !== 15) {
+                        number += " ";
+                    }
+                }
+                return number;
+            }
+    
+            function hideCurrentItem(callback, quickHide = false) {
+                amount.style.opacity = 0;
+                
+                setTimeout(() => {
+                    if (currentItem === "cash") {
+                        item.style.animation = "slideInDolar 0.3s forwards";
+                    } else if (currentItem === "bank") {
+                        item.style.animation = "slideInCard 0.3s forwards";
+                    }
+                    
+                    setTimeout(() => {
+                        item.src = "";
+                        callback();
+                    }, quickHide ? 300 : 500);
+                }, quickHide ? 150 : 300);
+            }
+    
+        function showItem(type, value) {
+            document.body.style.display = "flex";
+            walletContainer.classList.remove("animate__rollOut");
+            walletContainer.classList.add("animate__rotateInDownRight");
+
+            wallet.src = "images/wallet.png";
+            item.style.animation = "none";
+
+            setTimeout(() => {
+                if (type === "cash") {
+                    item.src = "images/dolar.png";
+                    item.style.width = "300%";
+                    item.style.top = "440%";
+                    item.style.left = "45%";
+                    item.style.animation = "slideOutDolar 0.7s forwards";
+                    amount.className = "cash-style";
+                    amount.innerText = "$" + value;
+                } else if (type === "bank") {
+                    item.src = "images/card.png";
+                    item.style.width = "65%";
+                    item.style.top = "99%";
+                    item.style.left = "55%";
+                    item.style.animation = "slideOutCard 0.7s forwards";
+                    amount.className = "bank-style";
+                    cardNumber = generateCardNumber();
+                    bankAmount = "$" + value;
+                }
+
+                setTimeout(() => {
+                    if (type === "bank") {
+                        amount.innerHTML = `${bankAmount}<br><div class='card-number-style'>${cardNumber}</div>`;
+                    }
+                    amount.style.opacity = 1;
+                    amount.style.transform = type === "cash" ? "rotate(9.2deg)" : "rotate(8deg)";
+                    currentItem = type;
+                }, 400);
+            }, 300);
+        }
+    
+            if (event.data.type === "show_cash") {
+                if (currentItem === "bank") {
+                    hideCurrentItem(() => showItem("cash", event.data.cash), true);
+                } else {
+                    showItem("cash", event.data.cash);
+                }
+            }
+    
+            if (event.data.type === "show_bank") {
+                if (currentItem === "cash") {
+                    hideCurrentItem(() => showItem("bank", event.data.bank), true);
+                } else {
+                    showItem("bank", event.data.bank);
+                }
+            }
+    
+            if (event.data.type === "hide") {
+                hideCurrentItem(() => {
+                    walletContainer.classList.remove("animate__rotateInDownRight");
+                    walletContainer.classList.add("animate__rollOut");
+                    setTimeout(() => { document.body.style.display = "none"; }, 1000);
+                });
             }
         });
     </script>

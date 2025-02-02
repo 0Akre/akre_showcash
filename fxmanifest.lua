@@ -2,11 +2,7 @@ fx_version 'cerulean'
 game 'gta5'
 
 name "Akre"
-version "1.0"
-
-server_scripts {
-    'server.lua'
-}
+version "1.1"
 
 client_scripts {
     'client.lua'
